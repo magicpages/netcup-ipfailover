@@ -157,14 +157,14 @@ class NetcupAPI:
 
         if not self.isPingable(self.failoverIP):
             # start wait time
-            self.logger.warn("First ping to failoverIP failed, wait " +
+            self.logger.warning("First ping to failoverIP failed, wait " +
                              str(timeBetweenPings) + " seconds ...")
             time.sleep(timeBetweenPings)
 
             # Second Try: ping failover IP
             if not self.isPingable(self.failoverIP):
                 isFailoverIPPingable = False
-                self.logger.warn("Second ping to failoverIP failed ...")
+                self.logger.warning("Second ping to failoverIP failed ...")
             else:
                 self.logger.info("FailoverIP back to normal ...")
         return isFailoverIPPingable

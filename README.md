@@ -34,7 +34,7 @@ NETCUP_API_URL |Netcup SCP Webservice API | https://www.vservercontrolpanel.de:4
 NETCUP_USER | Netcup user  | -
 NETCUP_PASSWORD | Netcup Password | -
 FAILOVER_SERVER_LIST | Netcup comma separated server list name e.g. "v22016063665435548,v22016063665435512"| -
-SLACK_WEBHOOK_URL | Slack webhook url | https://hooks.slack.com/services/<TOKEN>
+WEBHOOK_URL | Webhook url to send a notification if a failover is initiated | https://api.example.com/webhook
 TIME_BETWEEN_PINGS | Time between two pings in seconds, after that, a failover will be initiated | 60
 DRY_RUN | if set to 'ENABLED' the container monitors the failover ip, but won't reassign the failoverIP if a server is down. | ''
 LOG_LEVEL | Log level. To view the log you can navigate to the log file /var/log/failover.log | INFO

@@ -1,0 +1,9 @@
+version: '3.8'
+
+services:
+  failover:
+    build: .
+    env_file:
+      - .env
+    volumes:
+      - ./failover:/srv/failover

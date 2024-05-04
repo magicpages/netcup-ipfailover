@@ -1,2 +1,3 @@
 failover/modules/__pycache__
 *.pyc
+.env

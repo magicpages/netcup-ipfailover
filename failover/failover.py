@@ -2,8 +2,8 @@ import logging
 import os
 from modules.netcupapi import NetcupAPI
 from modules import helper
-from modules.slack import Slack
 from modules.vserver import VServer
+import requests
 import sys
 import time
 
@@ -34,7 +34,7 @@ failoverIPNetmask = os.environ["FAILOVER_NETMASK"]
 isDryRun = os.environ["DRY_RUN"]
 logger.debug(isDryRun)
 
-slackWebhookURL = os.environ['SLACK_WEBHOOK_URL']
+webhookURL = os.environ['WEBHOOK_URL']
 timeBetweenPings = int(os.environ["TIME_BETWEEN_PINGS"])
 
 # create netcupAPI object
@@ -54,7 +54,7 @@ while True:
         continue
 
     # failover ip is unreachable
-    logger.warn('FailoverIP unreachable, check server ...')
+    logger.warning('FailoverIP unreachable, check server ...')
 
     # get first pingable server
     firstPingableServer = netcupAPI.getFirstPingableServer(failoverServers)
@@ -84,7 +84,7 @@ while True:
 
     if currentFailoverIPServer is None:
         #FailoverIP is not assigned
-        logger.warn('FailoverIP is not assigned. Assign to ' +
+        logger.warning('FailoverIP is not assigned. Assign to ' +
                     firstPingableServer.nickname)
         netcupAPI.setFailoverIPRouting(firstPingableServer)
         logger.info('FailoverIP assigned, continue monitoring...')
@@ -94,21 +94,23 @@ while True:
         logger.info('Current failover server is ' +
                     currentFailoverIPServer.nickname)
 
+    def send_webhook_message(webhook_url, message, status='failed'):
+        try:
+            response = requests.post(webhook_url, json={'message': message, 'status': status})
+            response.raise_for_status()
+        except requests.RequestException as error:
+            logger.error(f"Failed to send webhook message: {str(error)}")
 
 #######    FAILOVER    #######
     # delete IP Routing
-    logger.info("Delete FailoverIP from " +
-                currentFailoverIPServer.nickname + " ... ")
+    logger.info("Delete FailoverIP from " + currentFailoverIPServer.nickname + " ... ")
     if netcupAPI.deleteFailoverIPRouting(currentFailoverIPServer):
         logger.info("FailoverIP routing deleted...")
-        logger.info("Set new FailoverIP routing to " +
-                    firstPingableServer.nickname + " ... ")
+        logger.info("Set new FailoverIP routing to " + firstPingableServer.nickname + " ... ")
         if netcupAPI.setFailoverIPRouting(firstPingableServer):
-            slack = Slack(slackWebhookURL, logger)
-            slack.sendMessage(
-                'Failover successfull from ' + currentFailoverIPServer.nickname + ' to ' + firstPingableServer.nickname)
+            send_webhook_message(webhookURL, 'Failover successful from ' + currentFailoverIPServer.nickname + ' to ' + firstPingableServer.nickname, 'success')
         else:
             logger.error('Error in new Routing ... Restart')
-            slack.sendMessage('Error in Failover ...')
+            send_webhook_message(webhookURL, 'Error in Failover ...')
     else:
-        slack.sendMessage('Error in Failover ...')
+        send_webhook_message(webhookURL, 'Error in Failover ...')
